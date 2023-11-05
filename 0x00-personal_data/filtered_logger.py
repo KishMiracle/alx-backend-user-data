@@ -1,16 +1,43 @@
 #!/usr/bin/env python3
+import logging
+import csv
 import re
 
 
+# Define a constant for PII fields
+PII_FIELDS = ('name', 'email', 'phone', 'ssn', 'credit_card')
+
+# Define a custom formatter that redacts PII fields
+class RedactingFormatter(logging.Formatter):
+    def format(self, record):
+        message = super().format(record)
+        for field in PII_FIELDS:
+            message = re.sub(rf'{field}=\S+', f'{field}=REDACTED', message)
+        return message
+
+# Create a logger with the specified configuration
+def get_logger():
+    logger = logging.getLogger("user_data")
+    logger.setLevel(logging.INFO)
+    logger.propagate = False
+
+    handler = logging.StreamHandler()
+    handler.setFormatter(RedactingFormatter())
+
+    logger.addHandler(handler)
+
+    return logger
+
+# Define the filter_datum function to obfuscate log messages
+def filter_datum(fields, redaction, message, separator):
+    pattern = r'({})(?={}|$)'.format('|'.join(map(re.escape, fields)), re.escape(separator))
+    return re.sub(pattern, redaction, message)
+
+# Implement the LogFilter class with format method
 class LogFilter:
     def __init__(self, fields):
         self.fields = fields
 
-    def filter_datum(self, redaction, message, separator):
-        pattern = ""r'({})(?={}|$)'.format('|'.join(map(re.escape,
-            self.fields)), re.escape(separator))""
-        return re.sub(pattern, redaction, message)
-
     def format(self, message, separator):
         redaction = 'REDACTED'
-        return self.filter_datum(redaction, message, separator)
+        return filter_datum(self.fields, redaction, message, separator)
