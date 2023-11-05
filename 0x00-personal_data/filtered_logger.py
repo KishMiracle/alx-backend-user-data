@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
+import os
 import logging
-import csv
 import re
+import mysql.connector
 
 
 # Define a constant for PII fields
@@ -35,9 +36,28 @@ def filter_datum(fields, redaction, message, separator):
 
 # Implement the LogFilter class with format method
 class LogFilter:
-    def __init__(self, fields):
+    def __init(self, fields):
         self.fields = fields
 
     def format(self, message, separator):
         redaction = 'REDACTED'
         return filter_datum(self.fields, redaction, message, separator)
+
+# Create a function to get a database connection
+def get_db():
+    db_username = os.getenv('PERSONAL_DATA_DB_USERNAME', 'root')
+    db_password = os.getenv('PERSONAL_DATA_DB_PASSWORD', '')
+    db_host = os.getenv('PERSONAL_DATA_DB_HOST', 'localhost')
+    db_name = os.getenv('PERSONAL_DATA_DB_NAME')
+
+    try:
+        connection = mysql.connector.connect(
+            user=db_username,
+            password=db_password,
+            host=db_host,
+            database=db_name
+        )
+        return connection
+    except mysql.connector.Error as err:
+        print(f"Error: {err}")
+        return None
