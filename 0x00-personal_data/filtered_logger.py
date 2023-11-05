@@ -6,7 +6,7 @@ import mysql.connector
 
 
 # Define a constant for PII fields
-PII_FIELDS = ('name', 'email', 'phone', 'ssn', 'credit_card')
+PII_FIELDS = ('name', 'email', 'phone', 'ssn', 'password')
 
 # Define a custom formatter that redacts PII fields
 class RedactingFormatter(logging.Formatter):
@@ -36,7 +36,7 @@ def filter_datum(fields, redaction, message, separator):
 
 # Implement the LogFilter class with format method
 class LogFilter:
-    def __init(self, fields):
+    def __init__(self, fields):
         self.fields = fields
 
     def format(self, message, separator):
@@ -61,3 +61,25 @@ def get_db():
     except mysql.connector.Error as err:
         print(f"Error: {err}")
         return None
+
+# Implement the main function
+def main():
+    # Get a database connection
+    db_connection = get_db()
+    if db_connection:
+        cursor = db_connection.cursor()
+        cursor.execute("SELECT * FROM users")
+        rows = cursor.fetchall()
+
+        # Create a logger
+        logger = get_logger()
+
+        # Log each row with PII redacted
+        for row in rows:
+            log_message = ', '.join([f'{field}={value}' for field, value in zip(PII_FIELDS, row)])
+            logger.info(LogFilter(PII_FIELDS).format(log_message, ', '))
+
+        db_connection.close()
+
+if __name__ == '__main__':
+    main()
