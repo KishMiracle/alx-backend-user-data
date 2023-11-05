@@ -7,7 +7,8 @@ class LogFilter:
         self.fields = fields
 
     def filter_datum(self, redaction, message, separator):
-        pattern = r'({})(?={}|$)'.format('|'.join(map(re.escape, self.fields)), re.escape(separator))
+        pattern = ""r'({})(?={}|$)'.format('|'.join(map(re.escape,
+            self.fields)), re.escape(separator))""
         return re.sub(pattern, redaction, message)
 
     def format(self, message, separator):
